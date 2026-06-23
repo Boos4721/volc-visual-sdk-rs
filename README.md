@@ -9,8 +9,8 @@ no OpenSSL required.
 
 ## Features
 
-- Native Signature V4, validated byte-for-byte against fixed vectors generated
-  from the official Python SDK.
+- Native Signature V4, validated byte-for-byte against fixed vectors that match
+  the official Python and Go SDKs.
 - The three standard call shapes used across the Visual APIs:
   - **synchronous** — `cv_process` (`Action=CVProcess`)
   - **async submit** — `cv_submit_task` (`Action=CVSubmitTask`)
@@ -102,6 +102,33 @@ Defaults: `service = cv`, `region = cn-north-1`, `host = visual.volcengineapi.co
 The signing core (`sign::sign_with_date`) is deterministic and covered by fixed
 vectors in `src/sign.rs` — run `cargo test` to verify the canonical request
 hash, signing key and final signature all match the reference implementation.
+
+## Verification
+
+The fixed signature vectors are not self-referential: they were cross-checked
+against both official SDKs for the same request, and all three implementations
+(this crate, the Python SDK, the Go SDK) produce byte-for-byte identical output.
+
+```bash
+# 1) Rust unit tests (canonical hash, signing key, full signature)
+cargo test
+
+# 2) Cross-validate against the official Volcengine Go SDK.
+#    Clones volc-sdk-golang, drops a test into its `base` package to reach the
+#    unexported signer, feeds the same inputs as src/sign.rs, and asserts the
+#    Go signer matches. Requires a Go toolchain and network access.
+./scripts/verify_go_crossbuild.sh
+```
+
+| Source | Method | Result |
+| --- | --- | --- |
+| This crate | `cargo test` (fixed vectors) | matches |
+| Official Python SDK | `SignerV4.py` over the same inputs | matches |
+| Official Go SDK | `scripts/verify_go_crossbuild.sh` | matches |
+
+A notable correctness detail: the secret key feeds the first HMAC round as its
+**raw UTF-8 bytes** — it is *not* base64-decoded, even though it may look like
+base64. Both official SDKs do the same, and so does this crate.
 
 ## Examples
 

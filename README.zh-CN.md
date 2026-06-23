@@ -7,7 +7,7 @@
 
 ## 特性
 
-- 原生签名 V4，使用从官方 Python SDK 生成的固定向量逐字节校验正确性。
+- 原生签名 V4，使用与官方 Python、Go SDK 完全一致的固定向量逐字节校验正确性。
 - 智能视觉 API 通用的三类调用方式：
   - **同步** —— `cv_process`（`Action=CVProcess`）
   - **异步提交** —— `cv_submit_task`（`Action=CVSubmitTask`）
@@ -98,6 +98,31 @@ let client = VisualClient::new("AK...", "SK...")
 
 签名核心 `sign::sign_with_date` 是确定性的，由 `src/sign.rs` 中的固定向量覆盖——
 执行 `cargo test` 即可验证规范请求哈希、签名密钥与最终签名都与参考实现一致。
+
+## 验证
+
+这套固定向量不是自证循环：它们针对同一请求与两个官方 SDK 做了交叉比对，三个独立
+实现（本 crate、Python SDK、Go SDK）对同一输入产出**字节级一致**的签名。
+
+```bash
+# 1) Rust 单元测试（规范请求哈希、签名密钥、最终签名）
+cargo test
+
+# 2) 与官方火山 Go SDK 交叉验证。
+#    脚本会 clone volc-sdk-golang，向其 base 包注入一个测试以调用包内私有签名函数，
+#    喂入与 src/sign.rs 相同的固定输入，断言 Go 签名器结果一致。
+#    需要 Go 工具链与网络访问。
+./scripts/verify_go_crossbuild.sh
+```
+
+| 验证源 | 方式 | 结果 |
+| --- | --- | --- |
+| 本 crate | `cargo test`（固定向量） | 一致 |
+| 官方 Python SDK | `SignerV4.py` 跑相同输入 | 一致 |
+| 官方 Go SDK | `scripts/verify_go_crossbuild.sh` | 一致 |
+
+一个值得注意的正确性细节：SK 是以**原始 UTF-8 字节**参与第一层 HMAC 的——
+**不做 base64 解码**，即使它看起来像 base64。两个官方 SDK 都如此，本 crate 也如此。
 
 ## 示例
 
