@@ -40,7 +40,7 @@
 //!
 //! See the [`sign`] module for the full algorithm. The signing core is
 //! deterministic ([`sign::sign_with_date`]) and validated against fixed vectors
-//! generated from the official Python SDK.
+//! that match the official Python and Go SDKs.
 
 #![warn(missing_docs)]
 

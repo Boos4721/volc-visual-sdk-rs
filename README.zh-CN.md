@@ -22,7 +22,8 @@
 
 ```toml
 [dependencies]
-volc-visual-sdk = "0.1"
+# 尚未发布到 crates.io —— 直接依赖 git 仓库：
+volc-visual-sdk = { git = "https://github.com/Boos4721/volc-visual-sdk-rs" }
 ```
 
 默认开启的 `blocking` feature 使用基于 rustls 的 `reqwest` 阻塞客户端。
