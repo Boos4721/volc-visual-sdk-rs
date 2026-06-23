@@ -25,8 +25,7 @@ no OpenSSL required.
 
 ```toml
 [dependencies]
-# Not yet published to crates.io — depend on the git repo:
-volc-visual-sdk = { git = "https://github.com/Boos4721/volc-visual-sdk-rs" }
+volc-visual-sdk = "0.1"
 ```
 
 The default `blocking` feature uses `reqwest`'s blocking client over rustls.
